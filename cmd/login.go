@@ -18,13 +18,12 @@ import (
 
 var spinnerFrames = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
 
-func Login() error {
+func Login(profileArg string) error {
 	ctx := context.Background()
+	cfg := config.Load()
 
-	// Use saved defaults or prompt
-	defaults := config.LoadDefaults()
-	startURL := defaults.StartURL
-	region := defaults.Region
+	startURL := cfg.StartURL
+	region := cfg.Region
 	if startURL == "" {
 		startURL = promptText("SSO start URL")
 	} else {
@@ -37,13 +36,13 @@ func Login() error {
 	}
 
 	// Build AWS config
-	cfg, err := awsconfig.LoadDefaultConfig(ctx, awsconfig.WithRegion(region))
+	awsCfg, err := awsconfig.LoadDefaultConfig(ctx, awsconfig.WithRegion(region))
 	if err != nil {
 		return fmt.Errorf("load AWS config: %w", err)
 	}
 
 	// Register OIDC client
-	oidcClient := ssooidc.NewFromConfig(cfg)
+	oidcClient := ssooidc.NewFromConfig(awsCfg)
 	fmt.Print("Registering device client...")
 	dc, err := gosso.RegisterClient(ctx, oidcClient, "login")
 	if err != nil {
@@ -51,15 +50,24 @@ func Login() error {
 	}
 	fmt.Println("done")
 
-	// AUthenticate (incognito browser) with spinner
+	// Authenticate (incognito browser) with spinner
 	token, err := authenticateWithSpinner(ctx, oidcClient, dc, startURL)
 	if err != nil {
 		return err
 	}
 	token.Region = region
 
-	// List accounts with spinner
-	ssoClient := sso.NewFromConfig(cfg)
+	ssoClient := sso.NewFromConfig(awsCfg)
+
+	// If profile preset exists, use it directly
+	if profileArg != "" {
+		if preset, ok := cfg.Profiles[profileArg]; ok {
+			return loginWithPreset(ctx, ssoClient, token, profileArg, preset, region)
+		}
+		fmt.Printf("Profile %q not found in config, falling back to interactive.\n\n", profileArg)
+	}
+
+	// Interactive: list accounts
 	fmt.Print("Fetching accounts...")
 	accounts, err := gosso.ListAccounts(ctx, ssoClient, token.AccessToken)
 	if err != nil {
@@ -94,7 +102,49 @@ func Login() error {
 	// Prompt for profile name
 	profileName := promptText("Profile name")
 
-	// Write credentials and cache token
+	// Save preset to config for future use
+	if cfg.Profiles == nil {
+		cfg.Profiles = make(map[string]config.Profile)
+	}
+	cfg.Profiles[profileName] = config.Profile{
+		AccountID: selected.ID,
+		Role:      role,
+	}
+	config.Save(cfg)
+
+	return writeAndFinish(profileName, creds, region, token)
+}
+
+func loginWithPreset(
+	ctx context.Context,
+	client *sso.Client,
+	token *gosso.AccessToken,
+	profileName string,
+	preset config.Profile,
+	region string,
+) error {
+	fmt.Printf("Using preset: account=%s, role=%s\n", preset.AccountID, preset.Role)
+	fmt.Print("Fetching credentials")
+	creds, err := gosso.GetRoleCredentials(
+		ctx,
+		client,
+		token.AccessToken,
+		preset.AccountID,
+		preset.Role,
+	)
+	if err != nil {
+		return err
+	}
+	fmt.Println("done")
+	return writeAndFinish(profileName, creds, region, token)
+}
+
+func writeAndFinish(
+	profileName string,
+	creds *gosso.RoleCredentials,
+	region string,
+	token *gosso.AccessToken,
+) error {
 	if err := gosso.WriteCredentials(profileName, creds, region); err != nil {
 		return err
 	}
@@ -106,7 +156,6 @@ func Login() error {
 	)
 	fmt.Print("Press Enter after closing the browser...")
 	bufio.NewReader(os.Stdin).ReadBytes('\n')
-
 	return nil
 }
 
@@ -125,7 +174,6 @@ func authenticateWithSpinner(
 		close(done)
 	}()
 
-	// Spinner while waiting for browser auth
 	i := 0
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()

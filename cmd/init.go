@@ -8,17 +8,17 @@ import (
 )
 
 func Init() error {
-	fmt.Println("Creating default configuration for gosho...")
+	fmt.Println("Creating gosho configuration...")
 	fmt.Println()
 
-	startURL := promptText("SSO start URL")
-	region := promptSelect("Region", gosso.Regions)
+	cfg := config.Load()
+	cfg.StartURL = promptText("SSO start URL")
+	cfg.Region = promptSelect("Region", gosso.Regions)
 
-	config.SaveDefaults(&config.Defaults{
-		StartURL: startURL,
-		Region:   region,
-	})
+	if err := config.Save(cfg); err != nil {
+		return err
+	}
 
-	fmt.Println("✓ Defaults saved to ~/.gosho/defaults.json")
+	fmt.Printf("\n✓ Config saved to %s\n", config.Path())
 	return nil
 }

@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -13,29 +12,36 @@ type Profile struct {
 	Role      string `yaml:"role"`
 }
 
-type Environment struct {
+type Config struct {
+	StartURL string             `yaml:"start_url"`
+	Region   string             `yaml:"region"`
 	Profiles map[string]Profile `yaml:"profiles"`
 }
 
-type Config struct {
-	StartURL string                 `yaml:"start_url"`
-	Region   string                 `yaml:"region"`
-	Envs     map[string]Environment `yaml:"envs"`
-}
-
-func DefaultPath() string {
+func Path() string {
+	if p := os.Getenv("GOSHO_CONFIG"); p != "" {
+		return p
+	}
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, ".gosho", "config.yaml")
 }
 
-func Load(path string) (*Config, error) {
-	data, err := os.ReadFile(path)
+func Load() *Config {
+	data, err := os.ReadFile(Path())
 	if err != nil {
-		return nil, fmt.Errorf("read config: %w", err)
+		return &Config{}
 	}
 	var cfg Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("parse config: %w", err)
+	yaml.Unmarshal(data, &cfg)
+	return &cfg
+}
+
+func Save(cfg *Config) error {
+	path := Path()
+	os.MkdirAll(filepath.Dir(path), 0700)
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		return err
 	}
-	return &cfg, nil
+	return os.WriteFile(path, data, 0600)
 }
