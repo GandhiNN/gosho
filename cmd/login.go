@@ -37,7 +37,10 @@ func Login() error {
 	}
 
 	// Build AWS config
-	cfg, _ := awsconfig.LoadDefaultConfig(ctx, awsconfig.WithRegion(region))
+	cfg, err := awsconfig.LoadDefaultConfig(ctx, awsconfig.WithRegion(region))
+	if err != nil {
+		return fmt.Errorf("load AWS config: %w", err)
+	}
 
 	// Register OIDC client
 	oidcClient := ssooidc.NewFromConfig(cfg)
