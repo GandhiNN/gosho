@@ -12,6 +12,7 @@ const usage = `gosho - AWS SSO login with fresh browser sessions
 Usage:
 	gosho			Login to AWS SSO (interactive)
 	gosho init 		Configure default start URL and region
+	gosho status	Show cached profile status
 	gosho --help 	Show this help message
 `
 
@@ -20,6 +21,8 @@ func main() {
 		switch os.Args[1] {
 		case "init":
 			run(cmd.Init)
+		case "status":
+			run(cmd.Status)
 		case "--help", "-h", "help":
 			fmt.Print(usage)
 		default:

@@ -56,5 +56,35 @@ func SaveToken(profile string, token *AccessToken) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(cacheFilePath(profile), data, 0600)
+	if err := os.WriteFile(cacheFilePath(profile), data, 0600); err != nil {
+		return err
+	}
+	// Update profile index
+	return addToIndex(profile)
+}
+
+func indexPath() string {
+	return filepath.Join(cacheDir(), "profiles.json")
+}
+
+func addToIndex(profile string) error {
+	profiles := ListProfiles()
+	for _, p := range profiles {
+		if p == profile {
+			return nil
+		}
+	}
+	profiles = append(profiles, profile)
+	data, _ := json.MarshalIndent(profiles, "", "	")
+	return os.WriteFile(indexPath(), data, 0600)
+}
+
+func ListProfiles() []string {
+	data, err := os.ReadFile(indexPath())
+	if err != nil {
+		return nil
+	}
+	var profiles []string
+	json.Unmarshal(data, &profiles)
+	return profiles
 }
