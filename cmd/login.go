@@ -11,6 +11,7 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sso"
 	"github.com/aws/aws-sdk-go-v2/service/ssooidc"
+	"github.com/gandhinn/gosho/config"
 	gosso "github.com/gandhinn/gosho/sso"
 	"github.com/manifoldco/promptui"
 )
@@ -20,9 +21,20 @@ var spinnerFrames = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "�
 func Login() error {
 	ctx := context.Background()
 
-	// Prompt for start URL and region
-	startURL := promptText("SSO start URL")
-	region := promptSelect("Region", gosso.Regions)
+	// Use saved defaults or prompt
+	defaults := config.LoadDefaults()
+	startURL := defaults.StartURL
+	region := defaults.Region
+	if startURL == "" {
+		startURL = promptText("SSO start URL")
+	} else {
+		fmt.Printf("Using start URL: %s\n", startURL)
+	}
+	if region == "" {
+		region = promptSelect("Region", gosso.Regions)
+	} else {
+		fmt.Printf("Using region: %s\n", region)
+	}
 
 	// Build AWS config
 	cfg, _ := awsconfig.LoadDefaultConfig(ctx, awsconfig.WithRegion(region))
@@ -139,6 +151,9 @@ func promptText(label string) string {
 	p := promptui.Prompt{Label: label}
 	val, err := p.Run()
 	if err != nil {
+		if err == promptui.ErrInterrupt {
+			os.Exit(0)
+		}
 		fmt.Fprintf(os.Stderr, "prompt failed: %v\n", err)
 		os.Exit(1)
 	}
@@ -149,6 +164,9 @@ func promptSelect(label string, items []string) string {
 	s := promptui.Select{Label: label, Items: items, Size: 15}
 	_, val, err := s.Run()
 	if err != nil {
+		if err == promptui.ErrInterrupt {
+			os.Exit(0)
+		}
 		fmt.Fprintf(os.Stderr, "prompt failed: %v\n", err)
 		os.Exit(1)
 	}
@@ -159,6 +177,9 @@ func promptSelectIdx(label string, items []string) int {
 	s := promptui.Select{Label: label, Items: items, Size: 15}
 	idx, _, err := s.Run()
 	if err != nil {
+		if err == promptui.ErrInterrupt {
+			os.Exit(0)
+		}
 		fmt.Fprintf(os.Stderr, "prompt failed: %v\n", err)
 		os.Exit(1)
 	}
