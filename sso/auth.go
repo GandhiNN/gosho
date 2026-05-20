@@ -55,6 +55,11 @@ func Authenticate(
 
 	interval := time.Duration(authResp.Interval) * time.Second
 	for {
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("authentication cancelled")
+		default:
+		}
 		tokenResp, err := client.CreateToken(ctx, &ssooidc.CreateTokenInput{
 			ClientId:     &dc.ClientID,
 			ClientSecret: &dc.ClientSecret,
@@ -62,10 +67,12 @@ func Authenticate(
 			DeviceCode:   authResp.DeviceCode,
 		})
 		if err != nil {
-			// Check if authorization is still pending
 			if isAuthPending(err) {
 				time.Sleep(interval)
 				continue
+			}
+			if isAccessDenied(err) {
+				return nil, fmt.Errorf("access request rejected")
 			}
 			return nil, fmt.Errorf("create token: %w", err)
 		}
@@ -108,21 +115,13 @@ func RefreshToken(
 }
 
 func isAuthPending(err error) bool {
-	return err != nil && (contains(err.Error(), "AuthorizationPendingException") ||
-		contains(err.Error(), "authorization_pending"))
+	return err != nil && (strings.Contains(err.Error(), "AuthorizationPendingException") ||
+		strings.Contains(err.Error(), "authorization_pending"))
 }
 
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsStr(s, substr))
-}
-
-func containsStr(s, sub string) bool {
-	for i := 0; i <= len(s)-len(sub); i++ {
-		if s[i:i+len(sub)] == sub {
-			return true
-		}
-	}
-	return false
+func isAccessDenied(err error) bool {
+	return err != nil && (strings.Contains(err.Error(), "AccessDeniedException") ||
+		strings.Contains(err.Error(), "access_denied"))
 }
 
 func openIncognito(url string) {
