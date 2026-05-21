@@ -44,17 +44,41 @@ func Login(profileArg string) error {
 
 	// Register OIDC client
 	oidcClient := ssooidc.NewFromConfig(awsCfg)
-	fmt.Print("Registering device client...")
-	dc, err := gosso.RegisterClient(ctx, oidcClient, "login")
-	if err != nil {
-		return err
-	}
-	fmt.Println("done")
 
-	// Authenticate (incognito browser) with spinner
-	token, err := authenticateWithSpinner(ctx, oidcClient, dc, startURL)
-	if err != nil {
-		return err
+	// Try cached/refreshed token befor opening browser
+	var token *gosso.AccessToken
+	if profileArg != "" {
+		if cached, err := gosso.LoadCachedToken(profileArg); err == nil {
+			if !cached.IsExpired() {
+				fmt.Println("Using cached token (still valid)")
+				token = cached
+			} else if cached.RefreshToken != "" {
+				fmt.Print("Refreshing token...")
+				refreshed, err := gosso.RefreshToken(ctx, oidcClient, cached)
+				if err == nil {
+					fmt.Println("done")
+					token = refreshed
+					gosso.SaveToken(profileArg, token)
+				} else {
+					fmt.Println("failed, opening browser")
+				}
+			}
+		}
+	}
+
+	// Fresh auth if no valid token
+	if token == nil {
+		fmt.Print("Registering device client...")
+		dc, err := gosso.RegisterClient(ctx, oidcClient, "login")
+		if err != nil {
+			return err
+		}
+		fmt.Println("done")
+
+		token, err = authenticateWithSpinner(ctx, oidcClient, dc, startURL)
+		if err != nil {
+			return err
+		}
 	}
 	token.Region = region
 
