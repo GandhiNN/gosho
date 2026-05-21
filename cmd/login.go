@@ -22,6 +22,7 @@ func Login(profileArg string) error {
 	ctx := context.Background()
 	cfg := config.Load()
 
+	// Determine start URL and region
 	startURL := cfg.StartURL
 	region := cfg.Region
 	if startURL == "" {

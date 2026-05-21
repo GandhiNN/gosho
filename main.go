@@ -9,16 +9,22 @@ import (
 
 const usage = `gosho - AWS SSO login with fresh browser sessions
 
-Usage:
-	gosho [profile]		Login to AWS SSO (use preset if profile defined in config)
-	gosho init 			Configure default start URL and region
-	gosho status		Show cached profile status
-	gosho --help 		Show this help message
+Usage:	
+	gosho init 					Configure default start URL and region
+	gosho login [profile]		Login to AWS SSO (use preset if profile defined in config)
+	gosho status				Show cached profile status
+	gosho --help 				Show this help message
 `
 
 func main() {
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
+		case "login":
+			profile := ""
+			if len(os.Args) > 2 {
+				profile = os.Args[2]
+			}
+			runE(cmd.Login(profile))
 		case "init":
 			runE(cmd.Init())
 		case "status":
@@ -26,12 +32,13 @@ func main() {
 		case "--help", "-h", "help":
 			fmt.Print(usage)
 		default:
-			// Treat unknown arg as profile name
-			runE(cmd.Login(os.Args[1]))
+			fmt.Fprintf(os.Stderr, "unknown command: %s\n", os.Args[1])
+			fmt.Print(usage)
+			os.Exit(1)
 		}
 		return
 	}
-	runE(cmd.Login(""))
+	fmt.Print(usage)
 }
 
 func runE(err error) {
