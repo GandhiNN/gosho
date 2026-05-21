@@ -67,6 +67,7 @@ func Login(profileArg string) error {
 	}
 
 	// Fresh auth if no valid token
+	browserOpened := false
 	if token == nil {
 		fmt.Print("Registering device client...")
 		dc, err := gosso.RegisterClient(ctx, oidcClient, "login")
@@ -79,6 +80,7 @@ func Login(profileArg string) error {
 		if err != nil {
 			return err
 		}
+		browserOpened = true
 	}
 	token.Region = region
 
@@ -87,7 +89,7 @@ func Login(profileArg string) error {
 	// If profile preset exists, use it directly
 	if profileArg != "" {
 		if preset, ok := cfg.Profiles[profileArg]; ok {
-			return loginWithPreset(ctx, ssoClient, token, profileArg, preset, region)
+			return loginWithPreset(ctx, ssoClient, token, profileArg, preset, region, browserOpened)
 		}
 		fmt.Printf("Profile %q not found in config, falling back to interactive.\n\n", profileArg)
 	}
@@ -137,7 +139,7 @@ func Login(profileArg string) error {
 	}
 	config.Save(cfg)
 
-	return writeAndFinish(profileName, creds, region, token)
+	return writeAndFinish(profileName, creds, region, token, browserOpened)
 }
 
 func loginWithPreset(
@@ -147,9 +149,10 @@ func loginWithPreset(
 	profileName string,
 	preset config.Profile,
 	region string,
+	browserOpened bool,
 ) error {
 	fmt.Printf("Using preset: account=%s, role=%s\n", preset.AccountID, preset.Role)
-	fmt.Print("Fetching credentials")
+	fmt.Print("Fetching credentials...")
 	creds, err := gosso.GetRoleCredentials(
 		ctx,
 		client,
@@ -161,7 +164,7 @@ func loginWithPreset(
 		return err
 	}
 	fmt.Println("done")
-	return writeAndFinish(profileName, creds, region, token)
+	return writeAndFinish(profileName, creds, region, token, browserOpened)
 }
 
 func writeAndFinish(
@@ -169,6 +172,7 @@ func writeAndFinish(
 	creds *gosso.RoleCredentials,
 	region string,
 	token *gosso.AccessToken,
+	browserOpened bool,
 ) error {
 	if err := gosso.WriteCredentials(profileName, creds, region); err != nil {
 		return err
@@ -176,11 +180,13 @@ func writeAndFinish(
 	gosso.SaveToken(profileName, token)
 
 	fmt.Printf("\n✓ Credentials written to ~/.aws/credentials [%s]\n", profileName)
-	fmt.Println(
-		"\n⚠ Close all InPrivate/Incognito browser windows before logging into another environment.",
-	)
-	fmt.Print("Press Enter after closing the browser...")
-	bufio.NewReader(os.Stdin).ReadBytes('\n')
+	if browserOpened {
+		fmt.Println(
+			"\n⚠ Close all InPrivate/Incognito browser windows before logging into another environment.",
+		)
+		fmt.Print("Press Enter after closing the browser...")
+		bufio.NewReader(os.Stdin).ReadBytes('\n')
+	}
 	return nil
 }
 
