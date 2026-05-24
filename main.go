@@ -12,6 +12,7 @@ const usage = `gosho - AWS SSO login with fresh browser sessions
 Usage:	
 	gosho init 					Configure default start URL and region
 	gosho login [profile]		Login to AWS SSO (use preset if profile defined in config)
+	gosho login all				Login to all saved profiles
 	gosho status				Show cached profile status
 	gosho --help 				Show this help message
 `
@@ -24,7 +25,11 @@ func main() {
 			if len(os.Args) > 2 {
 				profile = os.Args[2]
 			}
-			runE(cmd.Login(profile))
+			if profile == "all" {
+				runE(cmd.LoginAll())
+			} else {
+				runE(cmd.Login(profile))
+			}
 		case "init":
 			runE(cmd.Init())
 		case "status":

@@ -267,3 +267,24 @@ func promptSelectIdx(label string, items []string) int {
 	}
 	return idx
 }
+
+func LoginAll() error {
+	cfg := config.Load()
+	if len(cfg.Profiles) == 0 {
+		fmt.Println("No saved profiles. Run 'gosho login' first to create one.")
+		return nil
+	}
+
+	profiles := make([]string, 0, len(cfg.Profiles))
+	for name := range cfg.Profiles {
+		profiles = append(profiles, name)
+	}
+
+	for i, name := range profiles {
+		fmt.Printf("\n━━━ [%d/%d] Logging in: %s ━━━\n\n", i+1, len(profiles), name)
+		if err := Login(name); err != nil {
+			fmt.Printf("⚠ Failed to login %s: %v\n", name, err)
+		}
+	}
+	return nil
+}
