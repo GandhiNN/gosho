@@ -22,20 +22,29 @@ func ListAccounts(
 	client *sso.Client,
 	accessToken string,
 ) ([]AccountInfo, error) {
-	resp, err := client.ListAccounts(ctx, &sso.ListAccountsInput{
-		AccessToken: &accessToken,
-		MaxResults:  aws.Int32(100),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("list accounts: %w", err)
-	}
-	accounts := make([]AccountInfo, 0, len(resp.AccountList))
-	for _, a := range resp.AccountList {
-		accounts = append(accounts, AccountInfo{
-			Name: aws.ToString(a.AccountName),
-			ID:   aws.ToString(a.AccountId),
+	var accounts []AccountInfo
+	var nextToken *string
+	for {
+		resp, err := client.ListAccounts(ctx, &sso.ListAccountsInput{
+			AccessToken: &accessToken,
+			MaxResults:  aws.Int32(100),
+			NextToken:   nextToken,
 		})
+		if err != nil {
+			return nil, fmt.Errorf("list accounts: %w", err)
+		}
+		for _, a := range resp.AccountList {
+			accounts = append(accounts, AccountInfo{
+				Name: aws.ToString(a.AccountName),
+				ID:   aws.ToString(a.AccountId),
+			})
+		}
+		if resp.NextToken == nil {
+			break
+		}
+		nextToken = resp.NextToken
 	}
+
 	return accounts, nil
 }
 
@@ -44,17 +53,25 @@ func ListRoles(
 	client *sso.Client,
 	accessToken, accountID string,
 ) ([]string, error) {
-	resp, err := client.ListAccountRoles(ctx, &sso.ListAccountRolesInput{
-		AccessToken: &accessToken,
-		AccountId:   &accountID,
-		MaxResults:  aws.Int32(50),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("list roles: %w", err)
-	}
-	roles := make([]string, 0, len(resp.RoleList))
-	for _, r := range resp.RoleList {
-		roles = append(roles, aws.ToString(r.RoleName))
+	var roles []string
+	var nextToken *string
+	for {
+		resp, err := client.ListAccountRoles(ctx, &sso.ListAccountRolesInput{
+			AccessToken: &accessToken,
+			AccountId:   &accountID,
+			MaxResults:  aws.Int32(50),
+			NextToken:   nextToken,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("list roles: %w", err)
+		}
+		for _, r := range resp.RoleList {
+			roles = append(roles, aws.ToString(r.RoleName))
+		}
+		if resp.NextToken == nil {
+			break
+		}
+		nextToken = resp.NextToken
 	}
 	return roles, nil
 }
