@@ -45,6 +45,9 @@ func RemoveCredentials(profile string) error {
 }
 
 func credentialsPath() string {
+	if p := os.Getenv("AWS_SHARED_CREDENTIALS_FILE"); p != "" {
+		return p
+	}
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, ".aws", "credentials")
 }
