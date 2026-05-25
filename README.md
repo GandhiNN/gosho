@@ -35,6 +35,7 @@ gosho login              # Interactive (saves preset for future use)
 gosho login icloud-dev   # Use saved preset (skips account/role selection)
 gosho login all          # Login to all saved profiles in sequence
 gosho logout icloud-dev  # Clear cached token and credentials
+gosho logout all         # Clear all cached tokens and credentials
 gosho init               # Configure default start URL and region
 gosho status             # Show cached profile status with expiry
 ```
