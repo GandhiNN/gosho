@@ -88,3 +88,23 @@ func ListProfiles() []string {
 	json.Unmarshal(data, &profiles)
 	return profiles
 }
+
+func RemoveToken(profile string) error {
+	path := cacheFilePath(profile)
+	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return removeFromIndex(profile)
+}
+
+func removeFromIndex(profile string) error {
+	profiles := ListProfiles()
+	filtered := make([]string, 0, len(profiles))
+	for _, p := range profiles {
+		if p != profile {
+			filtered = append(filtered, p)
+		}
+	}
+	data, _ := json.MarshalIndent(filtered, "", "\t")
+	return os.WriteFile(indexPath(), data, 0600)
+}

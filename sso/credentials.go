@@ -34,6 +34,16 @@ func WriteCredentials(profile string, creds *RoleCredentials, region string) err
 	return cfg.SaveTo(path)
 }
 
+func RemoveCredentials(profile string) error {
+	path := credentialsPath()
+	cfg, err := ini.Load(path)
+	if err != nil {
+		return nil // file does not exist
+	}
+	cfg.DeleteSection(profile)
+	return cfg.SaveTo(path)
+}
+
 func credentialsPath() string {
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, ".aws", "credentials")
