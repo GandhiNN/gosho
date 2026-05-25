@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
@@ -261,7 +262,15 @@ func promptSelect(label string, items []string) string {
 }
 
 func promptSelectIdx(label string, items []string) int {
-	s := promptui.Select{Label: label, Items: items, Size: 15}
+	s := promptui.Select{
+		Label:             label,
+		Items:             items,
+		Size:              15,
+		StartInSearchMode: true,
+		Searcher: func(input string, index int) bool {
+			return strings.Contains(strings.ToLower(items[index]), strings.ToLower(input))
+		},
+	}
 	idx, _, err := s.Run()
 	if err != nil {
 		if err == promptui.ErrInterrupt {
