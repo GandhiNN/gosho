@@ -8,6 +8,12 @@ import (
 	"github.com/gandhinn/gosho/cmd"
 )
 
+var (
+	version = "dev"
+	commit  = "unknown"
+	date    = "unknown"
+)
+
 func main() {
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
@@ -35,6 +41,8 @@ func main() {
 			runE(cmd.Status())
 		case "--help", "-h", "help":
 			printUsage()
+		case "--version", "-v", "version":
+			fmt.Printf("gosho %s (commit: %s, built: %s)\n", version, commit, date)
 		default:
 			fmt.Fprintf(os.Stderr, "unknown command: %s\n", os.Args[1])
 			printUsage()
@@ -62,6 +70,7 @@ func printUsage() {
 		{"gosho login [profile]", "Login to AWS SSO (use preset if profile exists)"},
 		{"gosho login all", "Login to all saved profiles"},
 		{"gosho logout [profile]", "Clear cached token and credentials for a profile"},
+		{"gosho logout all", "Clear all cached token and credentials"},
 		{"gosho status", "Show cached profile status"},
 		{"gosho help", "Show this help message"},
 	}
