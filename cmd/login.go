@@ -180,6 +180,11 @@ func writeAndFinish(
 	gosso.SaveToken(profileName, token)
 
 	fmt.Printf("\n✓ Credentials written to ~/.aws/credentials [%s]\n", profileName)
+
+	expiry := time.Unix(creds.Expiration, 0)
+	remaining := time.Until(expiry).Truncate(time.Minute)
+	fmt.Printf(" expires in %s\n", remaining)
+
 	if browserOpened {
 		fmt.Println(
 			"\n⚠ Close all InPrivate/Incognito browser windows before logging into another environment.",
