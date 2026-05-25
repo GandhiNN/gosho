@@ -31,17 +31,12 @@ go install github.com/gandhinn/gosho@latest
 ## Usage
 
 ```bash
-# First time: interactive (saves preset for future use)
-gosho
-
-# With saved preset: skips account/role selection
-gosho icloud-dev
-
-# Configure defaults (start URL, region)
-gosho init
-
-# Check cached profile status
-gosho status
+gosho login              # Interactive (saves preset for future use)
+gosho login icloud-dev   # Use saved preset (skips account/role selection)
+gosho login all          # Login to all saved profiles in sequence
+gosho logout icloud-dev  # Clear cached token and credentials
+gosho init               # Configure default start URL and region
+gosho status             # Show cached profile status with expiry
 ```
 
 ### Interactive flow
@@ -60,11 +55,15 @@ gosho status
 Once a profile has been used interactively, it's saved to config. Subsequent runs skip account/role selection:
 
 ```bash
-gosho icloud-prd
-# → opens fresh InPrivate browser
-# → authenticates with PRD SAML credentials
+gosho login icloud-prd
+# → reuses cached token if still valid (no browser)
+# → or opens fresh InPrivate browser if expired
 # → writes credentials directly (no prompts)
 ```
+
+### Token refresh
+
+If a cached token is still valid, gosho reuses it without opening a browser. If expired but refreshable, it refreshes automatically. A browser only opens when necessary.
 
 ## Configuration
 
@@ -89,8 +88,9 @@ Profiles are saved automatically after the first interactive login.
 - Registers an OIDC device client with AWS SSO
 - Opens Edge InPrivate (WSL) or Incognito (Linux/macOS) to avoid session reuse
 - Polls for token completion with a spinner
-- Retrieves role credentials and writes them as static credentials
-- Caches tokens per profile under `~/.gosho/cache/`
+- Caches and refreshes tokens per profile under `~/.gosho/cache/`
+- Retrieves role credentials and writes them as static credentials to `~/.aws/credentials`
+- Shows credential expiry time after each login
 
 ## Project structure
 
@@ -99,15 +99,16 @@ gosho/
 ├── main.go              # Entry point
 ├── Makefile             # Build/install
 ├── cmd/
-│   ├── login.go         # Interactive + preset login flow
+│   ├── login.go         # Interactive + preset + login all flow
+│   ├── logout.go        # Clear token and credentials
 │   ├── init.go          # Configure defaults
-│   └── status.go        # Show cached profile status
+│   └── status.go        # Show cached profile status (with color)
 ├── sso/
 │   ├── constant.go      # Regions, grant types, scopes
 │   ├── auth.go          # OIDC device auth, browser launch, WSL detection
 │   ├── token.go         # Token cache (per profile)
 │   ├── account.go       # List accounts/roles, get credentials
-│   └── credentials.go   # Write to ~/.aws/credentials
+│   └── credentials.go   # Write/remove ~/.aws/credentials
 └── config/
     └── config.go        # YAML config (start URL, region, profile presets)
 ```
