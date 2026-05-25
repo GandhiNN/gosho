@@ -293,6 +293,7 @@ func LoginAll() error {
 	for name := range cfg.Profiles {
 		profiles = append(profiles, name)
 	}
+	sort.Strings(profiles)
 
 	for i, name := range profiles {
 		fmt.Printf("\n━━━ [%d/%d] Logging in: %s ━━━\n\n", i+1, len(profiles), name)
