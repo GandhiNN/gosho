@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gandhinn/gosho/cmd"
 )
@@ -17,6 +18,8 @@ func main() {
 			}
 			if profile == "all" {
 				runE(cmd.LoginAll())
+			} else if strings.HasPrefix(profile, "-") {
+				printUsage()
 			} else {
 				runE(cmd.Login(profile))
 			}
