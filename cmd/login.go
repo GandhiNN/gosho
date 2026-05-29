@@ -182,7 +182,7 @@ func writeAndFinish(
 
 	fmt.Printf("\n✓ Credentials written to ~/.aws/credentials [%s]\n", profileName)
 
-	expiry := time.UnixMilli(creds.Expiration, 0)
+	expiry := time.UnixMilli(creds.Expiration)
 	remaining := time.Until(expiry).Truncate(time.Minute)
 	fmt.Printf(" expires in %s\n", remaining)
 
