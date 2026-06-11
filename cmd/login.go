@@ -179,7 +179,7 @@ func writeAndFinish(
 		return err
 	}
 	gosso.SaveToken(profileName, token)
-
+	gosso.SaveCLICache(profileName, token)
 	fmt.Printf("\n✓ Credentials written to ~/.aws/credentials [%s]\n", profileName)
 
 	expiry := time.UnixMilli(creds.Expiration)

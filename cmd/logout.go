@@ -15,6 +15,7 @@ func Logout(profile string) error {
 		}
 		for _, p := range profiles {
 			gosso.RemoveToken(p)
+			gosso.RemoveCLICache(p)
 			gosso.RemoveCredentials(p)
 			fmt.Printf("✓ Logged out: %s\n", p)
 		}
@@ -26,6 +27,7 @@ func Logout(profile string) error {
 	}
 
 	gosso.RemoveToken(profile)
+	gosso.RemoveCLICache(profile)
 	gosso.RemoveCredentials(profile)
 
 	fmt.Printf("✓ Logged out: %s (token + credentials removed)\n", profile)

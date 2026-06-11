@@ -89,6 +89,39 @@ func ListProfiles() []string {
 	return profiles
 }
 
+func SaveCLICache(sessionName string, token *AccessToken) error {
+	home, _ := os.UserHomeDir()
+	dir := filepath.Join(home, ".aws", "sso", "cache")
+	os.MkdirAll(dir, 0700)
+
+	h := sha1.Sum([]byte(sessionName))
+	path := filepath.Join(dir, fmt.Sprintf("%x.json", h))
+
+	entry := map[string]string{
+		"startUrl":              token.StartURL,
+		"region":                token.Region,
+		"accessToken":           token.AccessToken,
+		"expiresAt":             token.ExpiresAt.Format("2006-01-02T15:04:05Z"),
+		"clientId":              token.Client.ClientID,
+		"clientSecret":          token.Client.ClientSecret,
+		"registrationExpiresAt": token.Client.ExpiresAt.Format("2006-01-02T15:04:05Z"),
+		"refreshToken":          token.RefreshToken,
+	}
+
+	data, err := json.MarshalIndent(entry, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0600)
+}
+
+func RemoveCLICache(sessionName string) {
+	home, _ := os.UserHomeDir()
+	h := sha1.Sum([]byte(sessionName))
+	path := filepath.Join(home, ".aws", "sso", "cache", fmt.Sprintf("%x.json", h))
+	os.Remove(path)
+}
+
 func RemoveToken(profile string) error {
 	path := cacheFilePath(profile)
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
