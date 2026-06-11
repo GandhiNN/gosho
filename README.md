@@ -90,8 +90,21 @@ Profiles are saved automatically after the first interactive login.
 - Opens Edge InPrivate (WSL) or Incognito (Linux/macOS) to avoid session reuse
 - Polls for token completion with a spinner
 - Caches and refreshes tokens per profile under `~/.gosho/cache/`
+- Writes the SSO token to `~/.aws/sso/cache/` for AWS CLI compatibility
 - Retrieves role credentials and writes them as static credentials to `~/.aws/credentials`
+- Respects `AWS_SHARED_CREDENTIALS_FILE` if set
 - Shows credential expiry time after each login
+
+### AWS CLI compatibility
+
+Gosho writes tokens to the AWS CLI's SSO cache (`~/.aws/sso/cache/`), so both the AWS CLI and custom applications work with the same profile:
+
+```bash
+gosho login icloud-dev
+aws s3 ls --profile icloud-dev   # works without 'aws sso login'
+```
+
+The profile name in gosho must match the `sso_session` name in `~/.aws/config`.
 
 ## Project structure
 
