@@ -28,6 +28,12 @@ Or directly:
 go install github.com/gandhinn/gosho@latest
 ```
 
+### Development setup
+
+```bash
+pre-commit install
+```
+
 ## Usage
 
 ```bash
