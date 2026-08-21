@@ -8,7 +8,14 @@ AWS SSO login CLI with fresh browser sessions for clean multi-environment authen
 
 ## Why
 
-`aws sso login` reuses the browser session cache, so when you need different SAML credentials for different environments (e.g., DEV vs PRD), the cached browser session interferes. Gosho opens an InPrivate/Incognito window each time, ensuring you're prompted for the correct credentials.
+`aws sso login` reuses the browser session cache. When you work across multiple AWS environments that require different identity provider credentials (e.g., DEV vs PRD with separate SAML/OIDC IdPs), the cached session silently authenticates with the wrong identity — giving you access to the wrong account or failing entirely.
+
+Gosho solves this by:
+
+- Opening a **fresh InPrivate/Incognito window** for every login, so no session bleeds between environments
+- **Caching and refreshing tokens per profile**, so you only see a browser when strictly necessary
+- **Writing credentials directly** to `~/.aws/credentials`, making them available to the AWS CLI, SDKs, and Terraform without extra configuration
+- Providing a simple **preset system** i.e. after one interactive login, subsequent logins for the same profile are a single command with no prompts
 
 ## Install
 
