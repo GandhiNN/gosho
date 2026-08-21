@@ -50,9 +50,9 @@ pre-commit install
 
 ```bash
 gosho login              # Interactive (saves preset for future use)
-gosho login icloud-dev   # Use saved preset (skips account/role selection)
+gosho login aws-dev      # Use saved preset (skips account/role selection)
 gosho login all          # Login to all saved profiles in sequence
-gosho logout icloud-dev  # Clear cached token and credentials
+gosho logout aws-dev     # Clear cached token and credentials
 gosho logout all         # Clear all cached tokens and credentials
 gosho init               # Configure default start URL and region
 gosho status             # Show cached profile status with expiry
@@ -74,7 +74,7 @@ gosho status             # Show cached profile status with expiry
 Once a profile has been used interactively, it's saved to config. Subsequent runs skip account/role selection:
 
 ```bash
-gosho login icloud-prd
+gosho login aws-prd
 # → reuses cached token if still valid (no browser)
 # → or opens fresh InPrivate browser if expired
 # → writes credentials directly (no prompts)
@@ -92,11 +92,11 @@ Config file location: `~/.gosho/config.yaml` (override with `GOSHO_CONFIG` env v
 start_url: https://company.awsapps.com/start
 region: eu-west-1
 profiles:
-  icloud-dev:
+  aws-dev:
     account_id: "111111111111"
     role: DevOps
-  icloud-prd:
-    account_id: "568650317375"
+  aws-prd:
+    account_id: "222222222222"
     role: DevOps
 ```
 
@@ -118,8 +118,8 @@ Profiles are saved automatically after the first interactive login.
 Gosho writes tokens to the AWS CLI's SSO cache (`~/.aws/sso/cache/`), so both the AWS CLI and custom applications work with the same profile:
 
 ```bash
-gosho login icloud-dev
-aws s3 ls --profile icloud-dev   # works without 'aws sso login'
+gosho login aws-dev
+aws s3 ls --profile aws-dev   # works without 'aws sso login'
 ```
 
 The profile name in gosho must match the `sso_session` name in `~/.aws/config`.
