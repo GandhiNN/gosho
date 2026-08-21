@@ -14,6 +14,8 @@ AWS SSO login CLI with fresh browser sessions for clean multi-environment authen
 
 Requires Go 1.25+.
 
+### Linux / macOS
+
 ```bash
 # Build
 make build
@@ -22,7 +24,17 @@ make build
 make install
 ```
 
-Or directly:
+### Windows (PowerShell)
+
+```powershell
+# Build
+.\build.ps1 build
+
+# Install to ~\.local\bin
+.\build.ps1 install
+```
+
+### Go install (any platform)
 
 ```bash
 go install github.com/gandhinn/gosho@latest
@@ -93,7 +105,7 @@ Profiles are saved automatically after the first interactive login.
 ## How it works
 
 - Registers an OIDC device client with AWS SSO
-- Opens Edge InPrivate (WSL) or Incognito (Linux/macOS) to avoid session reuse
+- Opens Edge InPrivate (Windows/WSL), Chrome Incognito (Linux/macOS), or Firefox Private to avoid session reuse
 - Polls for token completion with a spinner
 - Caches and refreshes tokens per profile under `~/.gosho/cache/`
 - Writes the SSO token to `~/.aws/sso/cache/` for AWS CLI compatibility
@@ -117,7 +129,8 @@ The profile name in gosho must match the `sso_session` name in `~/.aws/config`.
 ```
 gosho/
 ├── main.go              # Entry point
-├── Makefile             # Build/install
+├── Makefile             # Build/install (Linux/macOS)
+├── build.ps1            # Build/install (Windows PowerShell)
 ├── cmd/
 │   ├── login.go         # Interactive + preset + login all flow
 │   ├── logout.go        # Clear token and credentials
