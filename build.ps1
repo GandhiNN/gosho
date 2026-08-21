@@ -12,7 +12,7 @@ param(
     [string]$Target = "build",
 
     [Parameter(Position = 1, ValueFromRemainingArguments)]
-    [string[]]$Args
+    [string[]]$ExtraArgs
 )
 
 $ErrorActionPreference = "Stop"
@@ -74,7 +74,7 @@ function Invoke-Fmt {
 
 function Invoke-Run {
     $runArgs = @("-ldflags", $LDFlags, ".")
-    if ($Args) { $runArgs += $Args }
+    if ($ExtraArgs) { $runArgs += $ExtraArgs }
     go run @runArgs
 }
 
