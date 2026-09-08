@@ -34,7 +34,11 @@ func main() {
 			if len(os.Args) > 2 {
 				profile = os.Args[2]
 			}
-			runE(cmd.Logout(profile))
+			if strings.HasPrefix(profile, "-") {
+				printUsage()
+			} else {
+				runE(cmd.Logout(profile))
+			}
 		case "import":
 			profile := ""
 			paste := false
