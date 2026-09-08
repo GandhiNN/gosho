@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -32,7 +33,10 @@ func Load() *Config {
 		return &Config{}
 	}
 	var cfg Config
-	yaml.Unmarshal(data, &cfg)
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: failed to parse config %s: %v\n", Path(), err)
+		return &Config{}
+	}
 	return &cfg
 }
 
