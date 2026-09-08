@@ -12,15 +12,20 @@ func WriteCredentials(profile string, creds *RoleCredentials, region string) err
 	path := credentialsPath()
 
 	var cfg *ini.File
-	var err error
-	if _, err = os.Stat(path); os.IsNotExist(err) {
-		os.MkdirAll(filepath.Dir(path), 0700)
+	if _, statErr := os.Stat(path); statErr != nil {
+		if !os.IsNotExist(statErr) {
+			return fmt.Errorf("stat credentials file: %w", statErr)
+		}
+		if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+			return fmt.Errorf("create credentials dir: %w", err)
+		}
 		cfg = ini.Empty()
 	} else {
-		cfg, err = ini.Load(path)
+		loaded, err := ini.Load(path)
 		if err != nil {
 			return fmt.Errorf("load credentials file: %w", err)
 		}
+		cfg = loaded
 	}
 
 	sec, _ := cfg.NewSection(profile)
