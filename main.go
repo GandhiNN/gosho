@@ -35,6 +35,17 @@ func main() {
 				profile = os.Args[2]
 			}
 			runE(cmd.Logout(profile))
+		case "import":
+			profile := ""
+			paste := false
+			for _, arg := range os.Args[2:] {
+				if arg == "--paste" {
+					paste = true
+				} else if !strings.HasPrefix(arg, "-") && profile == "" {
+					profile = arg
+				}
+			}
+			runE(cmd.Import(profile, paste))
 		case "init":
 			runE(cmd.Init())
 		case "status":
@@ -71,6 +82,7 @@ func printUsage() {
 		{"gosho login all", "Login to all saved profiles"},
 		{"gosho logout [profile]", "Clear cached token and credentials for a profile"},
 		{"gosho logout all", "Clear all cached token and credentials"},
+		{"gosho import [profile]", "Import credentials manually (use --paste for a block)"},
 		{"gosho status", "Show cached profile status"},
 		{"gosho help", "Show this help message"},
 	}
