@@ -84,7 +84,7 @@ func readPastedCredentials(r io.Reader) (*gosso.RoleCredentials, error) {
 // ParseCredentialBlock extracts AWS credential values from a pasted block.
 // It recognizes the common formats emitted by the AWS console and CLI:
 //
-//	export export AWS_ACCESS_KEY_ID="..."      (bash/zsh)
+//	export AWS_ACCESS_KEY_ID="..."      (bash/zsh)
 //	set AWS_ACCESS_KEY_ID=...            (Windows cmd)
 //	$Env:AWS_ACCESS_KEY_ID="..."         (PowerShell)
 //	aws_access_key_id = ...              (credentials ini)
