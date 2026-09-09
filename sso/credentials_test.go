@@ -126,3 +126,45 @@ func TestCredentialsPathRespectsEnv(t *testing.T) {
 		t.Errorf("credentialsPath() = %q, want %q", got, custom)
 	}
 }
+
+func TestListCredentialProfiles(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "credentials")
+	t.Setenv("AWS_SHARED_CREDENTIALS_FILE", path)
+
+	if err := WriteCredentials("aws-dev", &RoleCredentials{
+		AccessKeyID: "AKIADEV", SecretAccessKey: "s1",
+	}, "eu-west-1"); err != nil {
+		t.Fatalf("write dev: %v", err)
+	}
+	if err := WriteCredentials("aws-prd", &RoleCredentials{
+		AccessKeyID: "AKIAPRD", SecretAccessKey: "s2", SessionToken: "t2",
+	}, "us-east-1"); err != nil {
+		t.Fatalf("write prd: %v", err)
+	}
+
+	got := ListCredentialProfiles()
+	if len(got) != 2 {
+		t.Fatalf("ListCredentialProfiles len = %d, want 2 (%v)", len(got), got)
+	}
+	if !containsStr(got, "aws-dev") || !containsStr(got, "aws-prd") {
+		t.Errorf("missing expected profiles: %v", got)
+	}
+}
+
+func TestListCredentialProfilesMissingFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "does-not-exist")
+	t.Setenv("AWS_SHARED_CREDENTIALS_FILE", path)
+
+	if got := ListCredentialProfiles(); got != nil {
+		t.Errorf("expected nil for missing file, got %v", got)
+	}
+}
+
+func containsStr(s []string, v string) bool {
+	for _, x := range s {
+		if x == v {
+			return true
+		}
+	}
+	return false
+}
