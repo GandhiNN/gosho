@@ -54,7 +54,7 @@ func Import(profileArg string, paste bool) error {
 	}
 
 	fmt.Printf("\n Credentials written to ~/.aws/credentials [%s]\n", profile)
-	fmt.Println(" (imported credentials are not tracked in 'gosho status')")
+	fmt.Println(" (shown as IMPORTED in 'gosho status'; expiry is not tracked)")
 
 	return nil
 }
