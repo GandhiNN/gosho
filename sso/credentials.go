@@ -49,6 +49,24 @@ func RemoveCredentials(profile string) error {
 	return cfg.SaveTo(path)
 }
 
+// ListCredentialProfiles returns the profile (section) names present in the
+// AWS shared credentials file, excluding the ini default section. Returns nil
+// if the file does not exist.
+func ListCredentialProfiles() []string {
+	cfg, err := ini.Load(credentialsPath())
+	if err != nil {
+		return nil
+	}
+	var profiles []string
+	for _, sec := range cfg.Sections() {
+		if sec.Name() == ini.DefaultSection {
+			continue
+		}
+		profiles = append(profiles, sec.Name())
+	}
+	return profiles
+}
+
 func credentialsPath() string {
 	if p := os.Getenv("AWS_SHARED_CREDENTIALS_FILE"); p != "" {
 		return p
