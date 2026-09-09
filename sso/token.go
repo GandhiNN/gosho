@@ -132,11 +132,18 @@ func RemoveToken(profile string) error {
 
 func removeFromIndex(profile string) error {
 	profiles := ListProfiles()
+	if len(profiles) == 0 {
+		// No index yet; nothing to remove.
+		return nil
+	}
 	filtered := make([]string, 0, len(profiles))
 	for _, p := range profiles {
 		if p != profile {
 			filtered = append(filtered, p)
 		}
+	}
+	if err := os.MkdirAll(cacheDir(), 0700); err != nil {
+		return err
 	}
 	data, _ := json.MarshalIndent(filtered, "", "\t")
 	return os.WriteFile(indexPath(), data, 0600)
